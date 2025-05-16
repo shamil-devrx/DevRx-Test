@@ -3,16 +3,20 @@ import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import UserAvatar from "./UserAvatar";
+import { useAiAvailability } from "@/hooks/useAiAvailability";
 import {
   HomeIcon,
   HelpCircleIcon,
   TagIcon,
   UsersIcon,
   SettingsIcon,
+  BrainCircuitIcon,
+  AlertCircleIcon,
 } from "lucide-react";
 
 const Sidebar: React.FC = () => {
   const [location] = useLocation();
+  const { isAiAvailable, isLoading: isLoadingAi } = useAiAvailability();
 
   // Fetch popular tags
   const { data: popularTags } = useQuery({
@@ -56,6 +60,39 @@ const Sidebar: React.FC = () => {
               </li>
             ))}
           </ul>
+        </div>
+        
+        {/* AI Status Indicator */}
+        <div className="bg-white shadow rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <BrainCircuitIcon className="h-5 w-5 text-neutral-700" />
+            <h3 className="font-medium text-neutral-900">AI Features</h3>
+          </div>
+          
+          {isLoadingAi ? (
+            <div className="text-sm text-neutral-500 flex items-center">
+              <div className="w-3 h-3 bg-neutral-300 rounded-full animate-pulse mr-2"></div>
+              Checking status...
+            </div>
+          ) : isAiAvailable ? (
+            <div className="text-sm text-green-600 flex items-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+              AI features enabled
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="text-sm text-amber-600 flex items-center">
+                <div className="w-3 h-3 bg-amber-500 rounded-full mr-2"></div>
+                AI features disabled
+              </div>
+              <Link href="/settings">
+                <a className="text-xs text-primary-600 hover:underline flex items-center">
+                  <SettingsIcon className="h-3 w-3 mr-1" />
+                  Enable in settings
+                </a>
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="bg-white shadow rounded-lg p-5">

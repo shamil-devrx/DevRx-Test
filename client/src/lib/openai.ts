@@ -1,4 +1,5 @@
 import { apiRequest } from "./queryClient";
+import { useAiAvailability } from "@/hooks/useAiAvailability";
 
 // Send a message to the AI assistant
 export async function sendMessageToAI(
@@ -36,4 +37,17 @@ export async function getTagSuggestions(
     console.error("Error getting tag suggestions:", error);
     return [];
   }
+}
+
+// Custom hook to check if AI features are available
+export function useAiFeatures() {
+  const { isAiAvailable, isLoading } = useAiAvailability();
+  
+  return {
+    isAiAvailable,
+    isLoading,
+    aiMessage: isAiAvailable 
+      ? "AI assistant is ready to help" 
+      : "AI features are currently disabled. Add an OpenAI API key to enable them."
+  };
 }

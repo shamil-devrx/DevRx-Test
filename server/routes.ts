@@ -10,7 +10,7 @@ import {
   insertTagSchema,
   insertVoteSchema,
 } from "@shared/schema";
-import { generateAssistantResponse, generateSuggestion, suggestTags } from "./openai";
+import { generateAssistantResponse, generateSuggestion, suggestTags, isAiAvailable } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -318,6 +318,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI status endpoint
+  app.get('/api/ai/status', (req, res) => {
+    res.json({ isAvailable: isAiAvailable });
+  });
+
   // AI assistant routes
   app.post('/api/ai/chat', async (req, res) => {
     try {
@@ -333,6 +338,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting AI response:", error);
       res.status(500).json({ message: "Failed to get AI response" });
+    }
+  });
+
+  // Settings routes for managing API keys
+  app.post('/api/settings/openai-key', isAuthenticated, async (req, res) => {
+    try {
+      const { apiKey } = req.body;
+      
+      if (!apiKey || typeof apiKey !== 'string' || !apiKey.trim().startsWith('sk-')) {
+        return res.status(400).json({ message: "Invalid OpenAI API key format. API keys should start with 'sk-'" });
+      }
+
+      // Update the environment variable
+      process.env.OPENAI_API_KEY = apiKey.trim();
+      
+      res.json({ success: true, message: "API key updated successfully" });
+    } catch (error) {
+      console.error("Error updating OpenAI API key:", error);
+      res.status(500).json({ message: "Failed to update API key" });
     }
   });
 

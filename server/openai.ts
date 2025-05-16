@@ -1,7 +1,12 @@
 import OpenAI from "openai";
+import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
+// Check if OpenAI API key is available
+export const isAiAvailable = !!process.env.OPENAI_API_KEY;
+
+// Initialize OpenAI client only if API key is available
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
+const openai = isAiAvailable ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
 // Generate suggestion for a question
 export async function generateSuggestion(
@@ -9,6 +14,11 @@ export async function generateSuggestion(
   questionContent: string,
   tags: string[] = []
 ): Promise<string> {
+  // Return a message if AI is not available
+  if (!isAiAvailable || !openai) {
+    return "AI suggestions are not available. Please add an OpenAI API key to enable this feature.";
+  }
+  
   try {
     const prompt = `
 You are DevRx, an AI assistant that helps developers solve technical problems.
@@ -23,9 +33,16 @@ Focus on practical advice, possible troubleshooting steps, or potential solution
 Limit your response to 2-3 sentences maximum.
     `;
 
+    const messages: ChatCompletionMessageParam[] = [
+      { 
+        role: "user", 
+        content: prompt 
+      }
+    ];
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
+      messages,
       max_tokens: 200,
     });
 
@@ -39,10 +56,15 @@ Limit your response to 2-3 sentences maximum.
 // Generate response for an AI assistant chat
 export async function generateAssistantResponse(
   questionContent: string,
-  previousMessages: Array<{ role: string; content: string }> = []
+  previousMessages: Array<ChatCompletionMessageParam> = []
 ): Promise<string> {
+  // Return a message if AI is not available
+  if (!isAiAvailable || !openai) {
+    return "AI assistant is not available. Please add an OpenAI API key to enable this feature.";
+  }
+  
   try {
-    const systemMessage = {
+    const systemMessage: ChatCompletionMessageParam = {
       role: "system",
       content: `
 You are DevRx, an AI technical assistant for developers.
@@ -52,10 +74,15 @@ If you don't know the answer, admit that instead of making something up.
       `
     };
 
-    const messages = [
+    const userMessage: ChatCompletionMessageParam = {
+      role: "user",
+      content: questionContent
+    };
+
+    const messages: ChatCompletionMessageParam[] = [
       systemMessage,
       ...previousMessages,
-      { role: "user", content: questionContent }
+      userMessage
     ];
 
     const response = await openai.chat.completions.create({
@@ -76,6 +103,12 @@ export async function suggestTags(
   questionTitle: string,
   questionContent: string
 ): Promise<string[]> {
+  // Return empty array if AI is not available
+  if (!isAiAvailable || !openai) {
+    console.log("AI tag suggestions are not available. Please add an OpenAI API key to enable this feature.");
+    return [];
+  }
+
   try {
     const prompt = `
 Based on the following technical question, suggest up to 5 relevant tags that would categorize this question properly.
@@ -87,9 +120,16 @@ CONTENT: ${questionContent}
 Example response format: ["javascript", "nodejs", "express", "authentication", "jwt"]
     `;
 
+    const messages: ChatCompletionMessageParam[] = [
+      { 
+        role: "user", 
+        content: prompt 
+      }
+    ];
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
+      messages,
       response_format: { type: "json_object" },
       max_tokens: 150,
     });

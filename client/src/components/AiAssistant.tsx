@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import { XIcon, SendIcon, BrainCircuitIcon } from "lucide-react";
+import { XIcon, SendIcon, BrainCircuitIcon, AlertCircleIcon } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAiAssistant } from "@/hooks/useAiAssistant";
 import UserAvatar from "./UserAvatar";
 import { useAuth } from "@/hooks/useAuth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AiAssistantProps {
   isOpen: boolean;
@@ -14,7 +15,7 @@ interface AiAssistantProps {
 
 const AiAssistant: React.FC<AiAssistantProps> = ({ isOpen, onClose }) => {
   const [message, setMessage] = useState("");
-  const { messages, sendMessage, isLoading, clearConversation } = useAiAssistant();
+  const { messages, sendMessage, isLoading, clearConversation, isAiAvailable } = useAiAssistant();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
@@ -71,6 +72,15 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ isOpen, onClose }) => {
           </div>
           
           <div className="bg-neutral-50 h-96 overflow-y-auto p-4 space-y-4">
+            {!isAiAvailable && (
+              <Alert className="mb-4 bg-amber-50 border-amber-200">
+                <AlertCircleIcon className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                  AI features are currently disabled. Add an OpenAI API key to enable the assistant.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             {messages.length === 0 ? (
               <div className="flex items-start">
                 <div className="flex-shrink-0">
@@ -101,7 +111,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ isOpen, onClose }) => {
                   ) : (
                     <>
                       <div className="flex-shrink-0 ml-auto order-2">
-                        <UserAvatar user={user} className="h-10 w-10 rounded-full" />
+                        <UserAvatar user={user as any} className="h-10 w-10 rounded-full" />
                       </div>
                       <div className="mr-3 bg-primary-100 p-3 rounded-lg shadow-sm order-1 ml-auto">
                         <p className="text-sm text-neutral-800">{msg.content}</p>

@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getTagSuggestions } from "@/lib/openai";
@@ -27,7 +27,7 @@ type QuestionFormValues = z.infer<typeof questionFormSchema>;
 
 const QuestionForm: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const [tagInput, setTagInput] = useState("");
   const [isLoadingTagSuggestions, setIsLoadingTagSuggestions] = useState(false);
